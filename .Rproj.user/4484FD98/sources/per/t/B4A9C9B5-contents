@@ -1,0 +1,163 @@
+---
+title: "Transforming data 2: `select()`"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+## Learning Goals
+*At the end of this lesson, you should be able to:*    
+1. Use a combination of `select()`, `filter()`, and `mutate()` to transform data frames.  
+2. Use the `skimr` package to produce summaries of data.  
+3. Produce clean summaries of data using `summarize()`.  
+4. Use `group_by()` in combination with `summarize()` to produce grouped summaries of data.  
+
+## Questions
+If you have question or need help with a specific problem, please [email me](mailto: refurrow@ucdavis.edu).  
+
+## Load the tidyverse  
+```{r}
+library("tidyverse")
+```
+
+## Load the data  
+First, we'll load the library `here` again.  
+```{r}
+library("here")
+```
+
+Notice that when you load `here`, it tells you exactly where you are; this is why I always keep the package in a separate library call.  
+
+## Please also load `janitor`(https://garthtarr.github.io/meatR/janitor.html)
+```{r}
+library("janitor")
+```
+
+## Load the data
+The dataset we will use are simulated data made by Rob Furrow. They are representative of the kind of data we would work with in education research. The most important thing is that there is a mix of discrete and continuous variables. Let's load the data using `here`.  
+```{r}
+edu_dat <- read_csv(here("Day6/data", "workshop_wide.csv"))
+```
+
+## Creating New (Useful) Variables
+Let's take a quick look at our data to refresh our memory.
+
+```{r}
+glimpse(edu_dat)
+```
+
+We can see that our multiple choice questions (names starting with `mc1` or `mc2`) are just the raw student responses. However, we are interested in knowing how many students got these questions correct at different time points and/or in different courses.  We will take advantage of an approach we first explored last week when using the `filter()` function. If you recall, the double equals sign `==` was a way of asking a question about a variable (e.g. is `admit_level` equal to "Freshman").  We can use a similar approach to create a new variable that converts multiple choice answers (A, B, C, D) to a TRUE/FALSE based on correctness.
+
+For mc1, the correct answer is C. We will use a useful `dplyr` function called `mutate()` to make a new variable. Let's look at the code first, then break down what it's doing.
+
+```{r}
+edu_dat %>%
+  select(course,mc1_pre) %>%
+  mutate(mc1_pre_tf = (mc1_pre == "C"))
+```
+Take a look at these data. W
+
+
+```{r}
+names(edu_dat)
+```
+
+
+
+```{r}
+edu_dat <- read_csv(here("Day6/data", "workshop_wide.csv")) %>% clean_names()
+```
+
+Notice that all variable names are now lower case. `janitor` will also fix a lot of other issues, so I always include it as part of my initial loading of the data.  
+```{r}
+names(edu_dat)
+```
+
+## dplyr
+The first package that we will use  is `dplyr`. `dplyr` is used to transform data frames by extracting, rearranging, and summarizing data. This is very helpful, especially when wrangling large data, and makes dplyr one of most frequently used packages in the tidyverse. The two functions we will use most are `select()` and `filter()`.  
+
+## `select()`
+Select allows you to pull out columns of interest from a dataframe. To do this, just add the names of the columns to the `select()` command. The order in which you add them, will determine the order in which they appear in the output.
+```{r}
+names(edu_dat)
+```
+
+We are only interested in id, admit_level, final_exam.
+```{r}
+final_exam <- select(edu_dat, "id", "admit_level", "final_exam")
+final_exam
+```
+
+To add a range of columns use `start_col:end_col`.
+```{r}
+likert <- select(edu_dat, "id", likert1_pre:likert4_post)
+likert
+```
+
+The - operator is useful in select. It allows us to select everything except the specified variables.
+```{r}
+select(edu_dat, -peer)
+```
+
+You can also select columns based on the class of data.  
+```{r}
+select_if(edu_dat, is.numeric)
+```
+
+For very large data frames with lots of variables, `select()` utilizes lots of different operators to make things easier. Let's say we are only interested in the variables that deal with length.
+```{r}
+select(edu_dat, "id", contains("mc"))
+```
+
+There are many options that can be helpful, especially when working with large dataframes.  
+
+Options to select columns based on a specific criteria include:  
+1. starts_with() = Select columns that end with a character string 
+2. ends_with() = Select columns that end with a character string  
+3. contains() = Select columns that contain a character string  
+4. matches() = Select columns that match a regular expression  
+5. one_of() = Select columns names that are from a group of names  
+
+## Practice  
+1. Assess the structure of `edu_dat` and list the names of the columns. Are there any NA's in the data?
+```{r}
+
+```
+
+```{r}
+
+```
+
+2. We are interested in learning whether or not there is a correlation between the score on the final exam vs. prior gpa or class standing. Use select to build a new dataframe that only includes these variables. Store them as a new object called 'final_exam_correlation`.  
+```{r}
+
+```
+
+3. We are interested in building a new dataframe that is focused on pre- assessment data for all students. Make a new dataframe that only includes variables that contain the term "pre".
+```{r}
+
+```
+
+## Aside from aesthetics or very large data, why would you use `select()`?  
+Depending on who is the ultimate stakeholder for your analysis, simplyfing the data can focus attention. I also use it as a check when building plots; i.e. in order to make a plot you need an `x` and a `y`. By using select, you can be sure that you are asking R to do something that it can interpret.  
+
+Use select to focus the data on the variables gpa_prior and final_exam only. Then, make a scatterplot that shows this relationship.  
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+## That's it!  
+There are lots of uses for `select()` depending on the type and scale of data that you are working with, so please look at the [data transformation cheetsheet](https://www.rstudio.com/resources/cheatsheets/) if you have questions.

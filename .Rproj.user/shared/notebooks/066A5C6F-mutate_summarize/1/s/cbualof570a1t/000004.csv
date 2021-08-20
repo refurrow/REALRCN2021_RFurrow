@@ -1,0 +1,3 @@
+"0","edu_dat %>%"
+"0","  select(course,mc1_pre) %>%"
+"0","  mutate(mc1_pre_tf = (mc1_pre == ""C""))"
