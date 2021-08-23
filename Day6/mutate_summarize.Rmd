@@ -60,13 +60,39 @@ edu_dat %>%
   select(course,mc1_pre) %>%
   mutate(mc1_pre_tf = (mc1_pre == "C"))
 ```
-Take a look at these data. W
+Take a look at these data. What is this new column `mc1_pre_tf`?
+
+Your turn. Write the same code, except mutating `mc1_post` to create a TRUE/FALSE (i.e. correct/incorrect) variable.
+```{r}
+
+```
+
+Fantastic! We now have a great tool, `mutate()`, for changing variables into more useful forms.  Now let's work on summarizing these data. 
 
 
 ```{r}
-names(edu_dat)
+edu_dat %>%
+  select(mc1_pre, mc1_post) %>%
+  mutate(mc1_pre_tf = (mc1_pre == "C"),
+         mc1_post_tf = (mc1_post == "C")) %>%
+  summarize(mean_pre = mean(mc1_pre_tf,na.rm = TRUE),
+            mean_post = mean(mc1_post_tf,na.rm = TRUE))
 ```
 
+Okay, let's make sense of these data.  Which mean is higher?  What does that tell us about how students are performing on this multiple choice question?
+
+But wait, there's more.  One of the most powerful features of the `summarize()` function is that you can group by other variables as well.  In this case, you might be interested in whether we see similar improvements for students taking both courses, or if more students improved in one of the courses.  
+
+```{r}
+edu_dat %>%
+  select(mc1_pre, mc1_post, course) %>%
+  mutate(mc1_pre_tf = (mc1_pre == "C"),
+         mc1_post_tf = (mc1_post == "C")) %>%
+  group_by(course) %>%
+  summarize(mean_pre = mean(mc1_pre_tf,na.rm = TRUE),
+            mean_post = mean(mc1_post_tf,na.rm = TRUE))
+
+```
 
 
 ```{r}
