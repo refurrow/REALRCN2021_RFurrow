@@ -55,7 +55,9 @@ Take a look at these data. What is this new column `mc1_pre_tf`?  In this code w
 Let's now write the same code, except mutating `mc2_pre` to create a TRUE/FALSE (i.e. correct/incorrect) variable. For multiple choice question 2 (mc2), the correct answer is "A".
 
 ```{r}
-
+edu_dat %>%
+  select(mc2_pre) %>%
+  mutate(mc2_pre_tf = (mc2_pre == "A"))
 ```
 
 
@@ -64,7 +66,9 @@ Let's now write the same code, except mutating `mc2_pre` to create a TRUE/FALSE 
 Let's transform a different variable. Select the `final_exam` column, then use `mutate` to create a new variable called `final_exam_perc` that is `final_exam/100`.
 
 ```{r}
-
+edu_dat %>%
+  select(final_exam) %>%
+  mutate(final_exam_perc = final_exam/100)
 ```
 
 
@@ -81,7 +85,7 @@ edu_dat %>%
 
 Our data are messy.  Managing `NA` in R is pretty natural, but when we downloaded our data from Qualtrics, some of the missing responses became `-99`.  (Note, this is a real issue when going from Qualtrics to Excel.)  We want all of these `-99` values to be assigned `NA` as well. We can use a function called `ifelse()` to quickly find values meeting a certain condition and replace them.
 
-```{r, eval=FALSE}
+```{r}
 edu_dat %>%
   select(mc1_pre) %>%
   mutate(mc1_pre_clean = ifelse(mc1_pre == "-99", NA, mc1_pre)) %>%
@@ -94,7 +98,14 @@ Let's put this all together to summarize the average number of correct responses
 
 
 ```{r}
-
+edu_dat %>%
+  select(mc1_pre, mc1_post) %>%
+  mutate(mc1_pre_clean = ifelse(mc1_pre == "-99", NA, mc1_pre),
+         mc1_post_clean = ifelse(mc1_post == "-99", NA, mc1_post)) %>%
+  mutate(mc1_pre_tf = (mc1_pre_clean == "C"),
+         mc1_post_tf = (mc1_post_clean == "C")) %>%
+  summarize(mean_pre = mean(mc1_pre_tf, na.rm = TRUE),
+            mean_post = mean(mc1_post_tf, na.rm = TRUE))
 ```
 
 Okay, let's make sense of these data.  Which mean is higher?  What does that tell us about how students are performing on this multiple choice question?
@@ -105,7 +116,15 @@ Okay, let's make sense of these data.  Which mean is higher?  What does that tel
 ***But wait, there's more.***  One of the most powerful features of the `summarize()` function is that you can use the `group_by()` function to group by other variables as well.  In this case, you might be interested in whether we see similar improvements for students taking both courses, or if more students improved in one of the courses. Together we can slightly modify the code above to including this grouping.
 
 ```{r}
-
+edu_dat %>%
+  select(mc1_pre, mc1_post, course) %>%
+  mutate(mc1_pre_clean = ifelse(mc1_pre == "-99", NA, mc1_pre),
+         mc1_post_clean = ifelse(mc1_post == "-99", NA, mc1_post)) %>%
+  mutate(mc1_pre_tf = (mc1_pre_clean == "C"),
+         mc1_post_tf = (mc1_post_clean == "C")) %>%
+  group_by(course) %>%
+  summarize(mean_pre = mean(mc1_pre_tf, na.rm = TRUE),
+            mean_post = mean(mc1_post_tf, na.rm = TRUE))
 ```
 
 ***How do these results differ from what we looked at just before this?***
@@ -113,19 +132,26 @@ Okay, let's make sense of these data.  Which mean is higher?  What does that tel
 ## Practice part 1
 1. **Investigating the `admit_level` variable.** Use `count()` to see the different student responses for the `admit_level` variable.  
 ```{r}
-
+edu_dat %>%
+  count(admit_level)
 ```
 
 You may have noticed that we have "Freshman", "Transfer", "No Record", and `NA`. For our purposes, "No Record" is equivalent to `NA` -- either one represents missing data. Use `mutate()` combined with `ifelse()` to make a new variable called `admit_level_clean` that turns any "No Record" responses into `NA`.
 
 ```{r}
-
+edu_dat %>%
+  select(admit_level) %>%
+  mutate(admit_level_clean = ifelse(admit_level == "No Record", NA, admit_level))
 ```
 
 Finally, use `summarize()`, `mean()`, and `group_by()` to create a `mean_gpa` summary variable that summarizes the average prior gpa (`gpa_prior`) between transfer and non-transfer students.
 
 ```{r}
-
+edu_dat %>%
+  select(admit_level, gpa_prior) %>%
+  mutate(admit_level_clean = ifelse(admit_level == "No Record", NA, admit_level)) %>%
+  group_by(admit_level_clean) %>%
+  summarize(mean_gpa = mean(gpa_prior, na.rm = TRUE))
 ```
 
 
@@ -161,11 +187,11 @@ This has been a lot of new tools. Let's end today's session with some more pract
 
 ```{r, eval=FALSE}
 edu_dat %>%
-  select(mc2_pre, mc2_post, Course, admit_level) %>%
-  mutate(mc2_pre_clean = ifelse(mc2_pre = "-99", NA, mc2_pre),
-         mc2_post_clean = ifelse(mc2_post = "-99", NA, mc2_post)) %>%
+  select(mc2_pre, mc2_post, course, admit_level) %>% #course had been incorrectly capitalized
+  mutate(mc2_pre_clean = ifelse(mc2_pre == "-99", NA, mc2_pre), # need == inside ifelse()
+         mc2_post_clean = ifelse(mc2_post == "-99", NA, mc2_post)) %>% # need == inside ifelse()
   mutate(mc2_pre_tf = (mc2_pre_clean == "A"),
-         mc2_post_tf = (mc2_post_clean == "A"))
+         mc2_post_tf = (mc2_post_clean == "A")) %>%  #forgot the pipe %>%
   group_by(course, admit_level) %>%
   summarize(mean_pre = mean(mc2_pre_tf,na.rm = TRUE),
             mean_post = mean(mc2_post_tf,na.rm = TRUE))
@@ -180,7 +206,9 @@ edu_dat %>%
 # add lines to this code to get the summary requested above
 edu_dat %>%
   select(final_exam,mc1_post) %>%
-  mutate(mc1_post_tf = (mc1_post == "C"))
+  mutate(mc1_post_tf = (mc1_post == "C")) %>%
+  group_by(mc1_post_tf) %>%
+  summarize(mean_exam = mean(final_exam, na.rm = TRUE))
 ```
 
 ***Pause and make sure you can state these results in a single-sentence. ***
@@ -188,5 +216,9 @@ edu_dat %>%
 **Challenge/review.** We've thrown away a lot of data by only looking at the mean. Write code below to create a box plot where the x-axis is the TRUE/FALSE/NA value for `mc1_post_tf` and the y-axis is `final_exam`.  The `ggplot()` geometry for this is `geom_boxplot()`.
 
 ```{r}
-
+edu_dat %>%
+  select(final_exam,mc1_post) %>%
+  mutate(mc1_post_tf = (mc1_post == "C")) %>%
+  ggplot(aes(x = mc1_post_tf, y = final_exam)) + 
+  geom_boxplot()
 ```
